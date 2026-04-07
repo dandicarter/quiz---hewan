@@ -1,0 +1,164 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: QuizPage(),
+    );
+  }
+}
+
+class Question {
+  String emoji;
+  String answer;
+  List<String> options;
+
+  Question(this.emoji, this.answer, this.options);
+}
+
+class QuizPage extends StatefulWidget {
+  const QuizPage({super.key});
+
+  @override
+  State<QuizPage> createState() => _QuizPageState();
+}
+
+class _QuizPageState extends State<QuizPage> {
+  int index = 0;
+  int score = 0;
+  bool answered = false;
+  String selected = '';
+
+  List<Question> questions = [
+    Question('🐶', 'yuen', ['yuen', 'Babi', 'Monyet', 'Tikus']),
+    Question('🐷', 'rejak', ['rejak', 'Sapi', 'Kambing', 'Monyet']),
+    Question('🐵', 'noval', ['noval', 'Kucing', 'Anjing', 'Tikus']),
+    Question('🐭', 'dimas', ['dimas', 'Hamster', 'Kelinci', 'Monyet']),
+    Question('🐗', 'fatur', ['Babi', 'fatur', 'Kerbau', 'Sapi']),
+  ];
+
+  void answer(String choice) {
+    if (answered) return;
+
+    setState(() {
+      answered = true;
+      selected = choice;
+      if (choice == questions[index].answer) {
+        score++;
+      }
+    });
+  }
+
+  void next() {
+    if (index < questions.length - 1) {
+      setState(() {
+        index++;
+        answered = false;
+        selected = '';
+      });
+    } else {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Quiz Selesai"),
+          content: Text("Skor kamu: $score / ${questions.length}"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  index = 0;
+                  score = 0;
+                  answered = false;
+                  selected = '';
+                });
+              },
+              child: const Text("Ulangi"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Color getColor(String option) {
+    if (!answered) return Colors.blue;
+
+    if (option == questions[index].answer) return Colors.green;
+    if (option == selected) return Colors.red;
+
+    return Colors.grey;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final q = questions[index];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Quiz Tebak Hewan 🐾"),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text(
+              "Soal ${index + 1} / ${questions.length}",
+              style: const TextStyle(fontSize: 18),
+            ),
+
+            const SizedBox(height: 30),
+
+            // 🔥 EMOJI BESAR
+            Text(q.emoji, style: const TextStyle(fontSize: 100)),
+
+            const SizedBox(height: 30),
+
+            // PILIHAN JAWABAN
+            ...q.options.map((opt) {
+              return Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: getColor(opt),
+                    padding: const EdgeInsets.all(15),
+                  ),
+                  onPressed: () => answer(opt),
+                  child: Text(opt),
+                ),
+              );
+            }),
+
+            const SizedBox(height: 20),
+
+            if (answered)
+              Text(
+                selected == q.answer ? "Benar!" : "Salah!",
+                style: TextStyle(
+                  fontSize: 20,
+                  color: selected == q.answer ? Colors.green : Colors.red,
+                ),
+              ),
+
+            const Spacer(),
+
+            ElevatedButton(
+              onPressed: answered ? next : null,
+              child: const Text("Next"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
