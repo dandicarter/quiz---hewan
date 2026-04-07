@@ -1,164 +1,107 @@
-import 'package:flutter/material.dart';
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quiz Tebak Hewan 🐾</title>
+</head>
+<body style="font-family: Arial; text-align: center; padding: 20px;">
 
-void main() {
-  runApp(const MyApp());
-}
+  <h1>Quiz Tebak Hewan 🐾</h1>
+  <h3 id="progress"></h3>
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  <div id="emoji" style="font-size:100px;"></div>
 
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: QuizPage(),
-    );
-  }
-}
+  <div id="answers"></div>
 
-class Question {
-  String emoji;
-  String answer;
-  List<String> options;
+  <h2 id="result"></h2>
 
-  Question(this.emoji, this.answer, this.options);
-}
+  <button id="nextBtn" onclick="next()" disabled>Next</button>
 
-class QuizPage extends StatefulWidget {
-  const QuizPage({super.key});
+  <script>
+    const questions = [
+      { emoji: "🐶", answer: "yuen", options: ["yuen", "Babi", "Monyet", "Tikus"] },
+      { emoji: "🐷", answer: "rejak", options: ["rejak", "Sapi", "Kambing", "Monyet"] },
+      { emoji: "🐵", answer: "noval", options: ["noval", "Kucing", "Anjing", "Tikus"] },
+      { emoji: "🐭", answer: "dimas", options: ["dimas", "Hamster", "Kelinci", "Monyet"] },
+      { emoji: "🐗", answer: "fatur", options: ["Babi", "fatur", "Kerbau", "Sapi"] }
+    ];
 
-  @override
-  State<QuizPage> createState() => _QuizPageState();
-}
+    let index = 0;
+    let score = 0;
+    let answered = false;
+    let selected = "";
 
-class _QuizPageState extends State<QuizPage> {
-  int index = 0;
-  int score = 0;
-  bool answered = false;
-  String selected = '';
+    function loadQuestion() {
+      const q = questions[index];
 
-  List<Question> questions = [
-    Question('🐶', 'yuen', ['yuen', 'Babi', 'Monyet', 'Tikus']),
-    Question('🐷', 'rejak', ['rejak', 'Sapi', 'Kambing', 'Monyet']),
-    Question('🐵', 'noval', ['noval', 'Kucing', 'Anjing', 'Tikus']),
-    Question('🐭', 'dimas', ['dimas', 'Hamster', 'Kelinci', 'Monyet']),
-    Question('🐗', 'fatur', ['Babi', 'fatur', 'Kerbau', 'Sapi']),
-  ];
+      document.getElementById("progress").innerText =
+        "Soal " + (index + 1) + " / " + questions.length;
 
-  void answer(String choice) {
-    if (answered) return;
+      document.getElementById("emoji").innerText = q.emoji;
+      document.getElementById("result").innerText = "";
+      document.getElementById("nextBtn").disabled = true;
 
-    setState(() {
+      const answersDiv = document.getElementById("answers");
+      answersDiv.innerHTML = "";
+
+      q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+        btn.style.display = "block";
+        btn.style.margin = "10px auto";
+        btn.style.padding = "10px";
+
+        btn.onclick = () => answer(opt, btn);
+
+        answersDiv.appendChild(btn);
+      });
+
+      answered = false;
+      selected = "";
+    }
+
+    function answer(choice, btn) {
+      if (answered) return;
+
       answered = true;
       selected = choice;
-      if (choice == questions[index].answer) {
+
+      if (choice === questions[index].answer) {
         score++;
       }
-    });
-  }
 
-  void next() {
-    if (index < questions.length - 1) {
-      setState(() {
-        index++;
-        answered = false;
-        selected = '';
+      const buttons = document.querySelectorAll("#answers button");
+
+      buttons.forEach(b => {
+        if (b.innerText === questions[index].answer) {
+          b.style.backgroundColor = "green";
+        } else if (b.innerText === selected) {
+          b.style.backgroundColor = "red";
+        } else {
+          b.style.backgroundColor = "gray";
+        }
       });
-    } else {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("Quiz Selesai"),
-          content: Text("Skor kamu: $score / ${questions.length}"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() {
-                  index = 0;
-                  score = 0;
-                  answered = false;
-                  selected = '';
-                });
-              },
-              child: const Text("Ulangi"),
-            ),
-          ],
-        ),
-      );
+
+      document.getElementById("result").innerText =
+        selected === questions[index].answer ? "Benar!" : "Salah!";
+
+      document.getElementById("nextBtn").disabled = false;
     }
-  }
 
-  Color getColor(String option) {
-    if (!answered) return Colors.blue;
+    function next() {
+      if (index < questions.length - 1) {
+        index++;
+        loadQuestion();
+      } else {
+        document.body.innerHTML = `
+          <h1>Quiz Selesai</h1>
+          <h2>Skor kamu: ${score} / ${questions.length}</h2>
+          <button onclick="location.reload()">Ulangi</button>
+        `;
+      }
+    }
 
-    if (option == questions[index].answer) return Colors.green;
-    if (option == selected) return Colors.red;
+    loadQuestion();
+  </script>
 
-    return Colors.grey;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final q = questions[index];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Quiz Tebak Hewan 🐾"),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              "Soal ${index + 1} / ${questions.length}",
-              style: const TextStyle(fontSize: 18),
-            ),
-
-            const SizedBox(height: 30),
-
-            // 🔥 EMOJI BESAR
-            Text(q.emoji, style: const TextStyle(fontSize: 100)),
-
-            const SizedBox(height: 30),
-
-            // PILIHAN JAWABAN
-            ...q.options.map((opt) {
-              return Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(vertical: 5),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: getColor(opt),
-                    padding: const EdgeInsets.all(15),
-                  ),
-                  onPressed: () => answer(opt),
-                  child: Text(opt),
-                ),
-              );
-            }),
-
-            const SizedBox(height: 20),
-
-            if (answered)
-              Text(
-                selected == q.answer ? "Benar!" : "Salah!",
-                style: TextStyle(
-                  fontSize: 20,
-                  color: selected == q.answer ? Colors.green : Colors.red,
-                ),
-              ),
-
-            const Spacer(),
-
-            ElevatedButton(
-              onPressed: answered ? next : null,
-              child: const Text("Next"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+</body>
+</html>
